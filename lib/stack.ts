@@ -24,8 +24,10 @@ export class PM extends cdk.Stack {
       environment: {
         OUTPUT_BUCKET: outputBucket.bucketName,
       },
-      timeout: cdk.Duration.minutes(10),
-      memorySize: 1024 * 8,
+      reservedConcurrentExecutions: 10,
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024 * 4,
+      ephemeralStorageSize: cdk.Size.gibibytes(5),
     });
     const fnUrl = audioToVideoLambda.addFunctionUrl({
       cors: {

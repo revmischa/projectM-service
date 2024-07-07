@@ -8,9 +8,6 @@ use std::path::Path;
 use std::time::Duration;
 use aws_sdk_s3::presigning::PresigningConfig;
 use aws_sdk_s3::primitives::ByteStream;
-use glutin::context;
-use gstreamer_gl as gst_gl;
-use gstreamer as gst;
 
 pub async fn wget(url: &str) -> Result<PathBuf, Error> {
     // Create a temporary file
@@ -73,23 +70,3 @@ pub async fn presign_get_object(bucket: &str, key: &str, expiration: Duration) -
 
     Ok(presigned_req.uri().to_string())
 }
-
-// pub fn initialize_gl_context() -> Result<WindowedContext<PossiblyCurrent>, Error> {
-//     // let el = glutin::event_loop::EventLoop::new();
-//     // let wb = glutin::window::WindowBuilder::new().with_visible(false);
-//     // let windowed_context = ContextBuilder::new()
-//     //     .with_gl(glutin::GlRequest::Latest)
-//     //     .with_gl_profile(glutin::GlProfile::Core)
-//     //     .with_gl_debug_flag(true)
-//     //     .build_windowed(wb, &el)
-//     //     .map_err(|e| anyhow::anyhow!("Failed to create windowed context: {:?}", e))?;
-//     // let windowed_context = unsafe { windowed_context.make_current().map_err(|(_, e)| anyhow::anyhow!("Failed to make context current: {:?}", e))? };
-//     Ok(windowed_context)
-// }
-//
-// pub fn get_gl_display_and_context() -> Result<(gst_gl::GLDisplay, gst::gl::GLContext), Error> {
-//     let windowed_context = initialize_gl_context()?;
-//     let display = gst_gl::GLDisplayEGL::new();
-//     let context = unsafe { gst_gl::GLContext::new_wrapped(&display, windowed_context.context(), gst_gl::GLPlatform::EGL, gst_gl::GLAPI::GLES2, None)? };
-//     Ok((display, context))
-// }

@@ -72,6 +72,10 @@ pub async fn lambda_handler(event: LambdaEvent<LambdaFunctionUrlRequest>) -> Res
     upload_to_s3(&output_file.path(), &s3_bucket, &s3key).await?;
     let output_video_url = presign_get_object(&s3_bucket, &s3key, std::time::Duration::from_secs(24 * 60 * 60)).await?;
 
+    // delete the temporary files
+    std::fs::remove_file(audio_file)?;
+    output_file.close()?;
+
     match result {
         Ok(_) => Ok(LambdaResponse {
             output_video_url: Some(output_video_url),

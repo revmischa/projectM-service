@@ -1,11 +1,9 @@
-use std::env;
 use anyhow::{anyhow, Error};
 use gstreamer as gst;
 use gstreamer::prelude::*;
 use log::{debug, error, info, warn};
 use regex::Regex;
-// use crate::utils::{get_gl_display_and_context};
-use gstreamer_gl as gst_gl;
+use std::env;
 
 pub async fn visualize_audio(
     input_file: &str,
@@ -17,23 +15,37 @@ pub async fn visualize_audio(
     gst::init()?;
 
     // get from environment variable or panic
-    let presets_dir = env::var("PRESETS_DIR").expect("PRESETS_DIR environment variable is required");
-
-    info!("Input audio file: {}", input_file);
-    info!("Output video file: {}", output_file);
+    let presets_dir =
+        env::var("PRESETS_DIR").expect("PRESETS_DIR environment variable is required");
 
     // Validate and parse the resolution
     let resolution_regex = Regex::new(r"^(\d+)x(\d+)$").unwrap();
     let captures = resolution_regex
         .captures(resolution)
         .ok_or_else(|| anyhow!("Invalid resolution format"))?;
-    let width: u32 = captures.get(1).unwrap().as_str().parse::<u32>().unwrap_or(1920);
-    let height: u32 = captures.get(2).unwrap().as_str().parse::<u32>().unwrap_or(1080);
+    let width: u32 = captures
+        .get(1)
+        .unwrap()
+        .as_str()
+        .parse::<u32>()
+        .unwrap_or(1920);
+    let height: u32 = captures
+        .get(2)
+        .unwrap()
+        .as_str()
+        .parse::<u32>()
+        .unwrap_or(1080);
 
     // calculate mesh x/y size based on resolution
-    let mesh_x = (width as f32 / 100.0).ceil() as u32;
-    let mesh_y = (height as f32 / 100.0).ceil() as u32;
+    let mesh_x = (width as f32 / 200.0).ceil() as u32;
+    let mesh_y = (height as f32 / 200.0).ceil() as u32;
     let mesh_size = format!("{},{}", mesh_x, mesh_y);
+
+    info!("Input audio file: {}", input_file);
+    info!("Output video file: {}", output_file);
+    info!("Resolution: {}x{}", width, height);
+    info!("Mesh size: {}", mesh_size);
+    info!("Preset duration: {}", preset_duration);
 
     // Get GL display and context
     // let (gl_display, gl_context) = get_gl_display_and_context()?;
@@ -41,10 +53,10 @@ pub async fn visualize_audio(
     // Build the pipeline
     let pipeline_str = format!(
         "filesrc location={} ! decodebin name=dec \
-        dec. ! queue ! audioconvert ! audioresample ! tee name=t \
-        t. ! queue ! avenc_aac ! mp4mux name=mux ! filesink location={} \
-        t. ! queue ! audioconvert ! projectm preset={} preset-duration={} mesh-size={} ! videoconvert ! video/x-raw,width={},height={} ! x264enc ! mux.",
-        input_file, output_file, presets_dir, preset_duration, mesh_size, width, height
+    dec. ! queue ! audioconvert ! audioresample ! tee name=t \
+    t. ! queue ! avenc_aac bitrate=128000 ! queue ! mux. \
+    t. ! queue ! audioconvert ! projectm preset={} preset-duration={} mesh-size={} ! videoconvert ! video/x-raw,width={},height={},framerate=30/1 ! x264enc bitrate=5000 ! h264parse ! mp4mux name=mux ! filesink location={}",
+        input_file, presets_dir, preset_duration, mesh_size, width, height, output_file
     );
 
     let pipeline = gst::parse::launch(&pipeline_str)?;
