@@ -13,7 +13,7 @@ use uuid::Uuid;
 use aws_lambda_events::lambda_function_urls::LambdaFunctionUrlRequest;
 
 // how long each preset should be shown in the visualization
-const DEFAULT_PRESET_DURATION: u32 = 5;
+const DEFAULT_PRESET_DURATION: u32 = 10;
 
 #[derive(Deserialize, Debug)]
 pub struct Args {

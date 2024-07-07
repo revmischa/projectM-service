@@ -27,8 +27,8 @@ pub async fn visualize_audio(
     let captures = resolution_regex
         .captures(resolution)
         .ok_or_else(|| anyhow!("Invalid resolution format"))?;
-    let width: u32 = captures.get(1).unwrap().as_str().parse().or(Ok(1920))?;
-    let height: u32 = captures.get(2).unwrap().as_str().parse().or(Ok(1080))?;
+    let width: u32 = captures.get(1).unwrap().as_str().parse::<u32>().unwrap_or(1920);
+    let height: u32 = captures.get(2).unwrap().as_str().parse::<u32>().unwrap_or(1080);
 
     // calculate mesh x/y size based on resolution
     let mesh_x = (width as f32 / 100.0).ceil() as u32;
