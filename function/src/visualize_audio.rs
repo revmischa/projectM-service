@@ -4,6 +4,7 @@ use gstreamer::prelude::*;
 use log::{debug, error, info, warn};
 use regex::Regex;
 use std::env;
+use std::time::{Duration, Instant};
 
 pub async fn visualize_audio(
     input_file: &str,
@@ -37,8 +38,8 @@ pub async fn visualize_audio(
         .unwrap_or(1080);
 
     // calculate mesh x/y size based on resolution
-    let mesh_x = (width as f32 / 200.0).ceil() as u32;
-    let mesh_y = (height as f32 / 200.0).ceil() as u32;
+    let mesh_x = (width as f32 / 30.0).ceil() as u32;
+    let mesh_y = (height as f32 / 30.0).ceil() as u32;
     let mesh_size = format!("{},{}", mesh_x, mesh_y);
 
     info!("Input audio file: {}", input_file);
@@ -46,9 +47,6 @@ pub async fn visualize_audio(
     info!("Resolution: {}x{}", width, height);
     info!("Mesh size: {}", mesh_size);
     info!("Preset duration: {}", preset_duration);
-
-    // Get GL display and context
-    // let (gl_display, gl_context) = get_gl_display_and_context()?;
 
     // Build the pipeline
     let pipeline_str = format!(
@@ -60,11 +58,6 @@ pub async fn visualize_audio(
     );
 
     let pipeline = gst::parse::launch(&pipeline_str)?;
-
-    // Set GL context
-    // let projectm = pipeline.by_name("projectm").unwrap();
-    // let context_egl = projectm.downcast_ref::<gst_gl::GLBaseFilter>().unwrap();
-    // context_egl.set_gl_display_context(&gl_display, &gl_context)?;
 
     // Log the constructed pipeline
     debug!("Pipeline: {:?}", pipeline);
@@ -85,9 +78,35 @@ pub async fn visualize_audio(
     // Wait until error or EOS
     let bus = pipeline.bus().unwrap();
     let mut eos_received = false;
+    let start_time = Instant::now();
+
+    // Timer for progress indicator
+    let mut last_progress_time = Instant::now();
+    let mut frame_count = 0;
 
     for msg in bus.iter_timed(gst::ClockTime::NONE) {
         use gst::MessageView;
+
+        // Progress indicator logic
+        if last_progress_time.elapsed() >= Duration::from_secs(10) {
+            let elapsed = start_time.elapsed().as_secs();
+            let duration = pipeline.query_duration::<gst::ClockTime>().unwrap_or(gst::ClockTime::ZERO);
+            let percent_done = if duration != gst::ClockTime::ZERO {
+                (elapsed * 100 / duration.seconds()).min(100)
+            } else {
+                0
+            };
+
+            // Calculate the processing rate (fps)
+            let fps = frame_count as f64 / last_progress_time.elapsed().as_secs_f64();
+            frame_count = 0;
+
+            info!(
+                "Progress: {}% done at timestamp: {:?}, processing rate: {:.2} fps",
+                percent_done, start_time + Duration::from_secs(elapsed), fps
+            );
+            last_progress_time = Instant::now();
+        }
 
         match msg.view() {
             MessageView::Eos(..) => {
@@ -151,6 +170,9 @@ pub async fn visualize_audio(
                 debug!("Received message: {:?}", msg);
             }
         }
+
+        // Increment the frame count for processing rate calculation
+        frame_count += 1;
     }
 
     if !eos_received {
