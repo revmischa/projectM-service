@@ -7,14 +7,17 @@ It makes use of the [projectM gstreamer plugin](https://github.com/projectM-visu
 
 ## Quickstart
 
-Configure some AWS credentials.
+Configure some AWS credentials and create a profile for the account you wish to deploy in.
+
+If using an IAM user, run `aws configure`.
+
+If using SSO, run `aws configure sso`.
+
+Give your AWS profile a name.
 
 ```shell
-npm i -g pnpm aws-cdk
+npm i -g pnpm
 pnpm install
-cdk deploy
+pnpm exec cdk bootstrap --profile my-profile   # one-time setup
+pnpm exec cdk deploy --profile my-profile
 ```
-
-## Useful commands
-
-* `pnpm exec cdk deploy`  deploy this stack to your default AWS account/region

@@ -16,17 +16,16 @@ RUN apt-get update && \
         sudo
 
 # Clone the projectM repository and build it
-RUN git clone --depth 1 https://github.com/projectM-visualizer/projectm.git /tmp/projectm && \
-    cd /tmp/projectm && \
-    git fetch --all --tags && \
-    git submodule init && \
-    git submodule update && \
-    mkdir build && \
-    cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
-    make -j8 && \
-    make install && \
-    rm -rf /tmp/projectm
+RUN git clone --depth 1 https://github.com/projectM-visualizer/projectm.git /tmp/projectm
+WORKDIR /tmp/projectm
+RUN git submodule update --init --depth 1
+RUN mkdir build
+WORKDIR /tmp/projectm/build
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+RUN make -j8
+RUN make install
+WORKDIR /tmp
+RUN rm -rf /tmp/projectm
 
 # Get the projectM preset pack
 RUN git clone --depth 1 https://github.com/projectM-visualizer/presets-cream-of-the-crop.git /var/task/projectm/presets
@@ -47,9 +46,6 @@ RUN mkdir build && \
     cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release .. && \
     make
-RUN ls
-RUN pwd
-RUN ls
 RUN mkdir -p /var/task/projectm/gstreamer-plugins && \
     mv build/libgstprojectm.so $GST_PLUGIN_PATH/ && \
     rm -rf /tmp/gst-projectm
@@ -69,6 +65,8 @@ RUN apt-get remove -y \
     rm -rf /var/lib/apt/lists/*
 # remove rust toolchain
 RUN rm -rf /root/.cargo
+RUN rm -rf /root/.rustup
+RUN rm -rf /tmp
 
 WORKDIR /var/task
 

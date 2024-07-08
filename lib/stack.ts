@@ -15,11 +15,13 @@ export class PM extends cdk.Stack {
 
     // lambda function to convert audio to video
     const audioToVideoLambda = new lambda.Function(this, 'AudioToVideoLambda', {
+      // use arch of whatever we're building on, rather silly but eh
+      architecture: process.arch === 'arm64' ? lambda.Architecture.ARM_64 : lambda.Architecture.X86_64,
       runtime: lambda.Runtime.FROM_IMAGE,
       handler: lambda.Handler.FROM_IMAGE,
-      code: lambda.Code.fromAssetImage('function', {
+      code: lambda.Code.fromAssetImage('function/visualizer', {
         ignoreMode: cdk.IgnoreMode.GIT,
-        exclude: ['.idea', 'target']
+        exclude: ['target']
       }),
       environment: {
         OUTPUT_BUCKET: outputBucket.bucketName,
