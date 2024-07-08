@@ -5,6 +5,15 @@ running the audio data through the [projectM music visualizer](https://github.co
 
 It makes use of the [projectM gstreamer plugin](https://github.com/projectM-visualizer/gst-projectm).
 
+## Quickstart
+
+Configure some AWS credentials.
+
+```shell
+npm i -g pnpm aws-cdk
+pnpm install
+cdk deploy
+```
 
 ## Useful commands
 
