@@ -28,7 +28,7 @@ export class PM extends cdk.Stack {
       },
       reservedConcurrentExecutions: 10,
       timeout: cdk.Duration.minutes(15),
-      memorySize: 1024 * 4,
+      memorySize: 3008,
       ephemeralStorageSize: cdk.Size.gibibytes(5),
     });
     const fnUrl = audioToVideoLambda.addFunctionUrl({
